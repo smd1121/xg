@@ -1,0 +1,16 @@
+name: test
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+      - run: pip install -r xg/tests/requirements.txt
+      - run: pip install .
+      - run: coverage run -m pytest .
+      - run: coverage report
