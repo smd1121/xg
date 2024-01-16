@@ -1,19 +1,14 @@
 import typer
 
+from xg.commands.init import init
+
 app = typer.Typer()
+app.command()(init)
 
 
 @app.command()
 def hello(name: str):
-    print(f"Hello {name}")
-
-
-@app.command()
-def goodbye(name: str, formal: bool = False):
-    if formal:
-        print(f"Goodbye Ms. {name}. Have a good day.")
-    else:
-        print(f"Bye {name}!")
+    print(f"Hello -- {name}")
 
 
 def main():
