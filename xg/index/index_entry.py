@@ -1,5 +1,7 @@
 from typing import Optional
+from pathlib import Path
 
+from xg.utils.obj import hash_blob
 from xg.utils.misc import timestamp_to_str
 from xg.utils.repo import rel_to_abs
 from xg.index.metadata import Metadata
@@ -26,6 +28,16 @@ class Flag:
         stage = (flag & 0x3000) >> 12
         name_length = flag & 0x0FFF
         return Flag(assume_valid, extended, stage, name_length)
+
+    def to_bytes(self) -> bytes:
+        flag = 0
+        if self.assume_valid:
+            flag |= 0x8000
+        if self.extended:
+            flag |= 0x4000
+        flag |= self.stage << 12
+        flag |= self.name_length
+        return flag.to_bytes(2, "big")
 
     def __rich_repr__(self):
         yield "assume_valid", self.assume_valid
@@ -115,6 +127,35 @@ class IndexEntry:
             ),
             rest,
         )
+
+    def to_bytes(self) -> bytes:
+        result = b""
+        result += self.metadata.to_bytes()
+        result += bytes.fromhex(self.sha)
+        result += self.flags.to_bytes()
+        if self.flags.extended:
+            assert self.extended_flags is not None
+            result += self.extended_flags
+        result += self.file_name.encode()
+        result += b"\x00"
+        result += b"\x00" * ((len(result) + 7) // 8 * 8 - len(result))
+        return result
+
+    @staticmethod
+    def from_path(path: Path) -> "IndexEntry":
+        metadata = Metadata.get_metadata(path)
+        _, sha = hash_blob(path.read_bytes())
+        flags = Flag(assume_valid=False, extended=False, stage=0, name_length=len(path.name))
+        extended_flags = None
+        file_name = path.name
+        return IndexEntry(metadata, sha, flags, extended_flags, file_name)
+
+    @staticmethod
+    def from_cache_info(mode: str, obj: str, path: str) -> "IndexEntry":
+        p = rel_to_abs(path)
+        metadata = Metadata.from_cache_info(p, int(mode, 8))
+        flags = Flag(assume_valid=False, extended=False, stage=0, name_length=len(path))
+        return IndexEntry(metadata, obj, flags, None, path)
 
     # 以下用于 show-index 输出
 

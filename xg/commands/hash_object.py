@@ -1,11 +1,11 @@
 import sys
 import zlib
-import hashlib
 from pathlib import Path
 
 from typer import Option, Argument, echo
 from typing_extensions import Annotated
 
+from xg.utils.obj import hash_blob
 from xg.utils.repo import find_repo
 
 
@@ -24,9 +24,7 @@ def hash_object(
     with f.open("rb") as f_:
         data = f_.read()
 
-    # <type> SPACE <size> NUL <data>
-    object_data = b"blob" + b" " + str(len(data)).encode() + b"\x00" + data
-    object_id = hashlib.sha1(object_data).hexdigest()
+    object_data, object_id = hash_blob(data)
 
     echo(object_id)
 

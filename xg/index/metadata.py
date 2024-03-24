@@ -41,8 +41,22 @@ class Metadata:
         self.gid = gid
         self.file_size = file_size
 
+    def to_bytes(self) -> bytes:
+        result = b""
+        result += self.ctime_s.to_bytes(4, "big")
+        result += self.ctime_ns.to_bytes(4, "big")
+        result += self.mtime_s.to_bytes(4, "big")
+        result += self.mtime_ns.to_bytes(4, "big")
+        result += self.dev.to_bytes(4, "big")
+        result += self.inode.to_bytes(4, "big")
+        result += self.mode.to_bytes(4, "big")
+        result += self.uid.to_bytes(4, "big")
+        result += self.gid.to_bytes(4, "big")
+        result += self.file_size.to_bytes(4, "big")
+        return result
+
     @staticmethod
-    def from_cache_info(path, mode):
+    def from_cache_info(path: Path, mode: int):
         return Metadata(
             path=path,
             mode=mode,
