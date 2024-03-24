@@ -13,3 +13,8 @@ def find_repo() -> Path:
             sys.exit(128)
         p = p.parent
     return p
+
+
+def rel_to_abs(f: str) -> Path:
+    """Convert a path relative to the repo root to an absolute path."""
+    return (find_repo() / f).resolve()
